@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>룡수학 프리미엄 스케줄 대시보드 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+
+        :root {
+            --bg-main: #fcfcfb;
+            --accent-primary: #2563eb;
+            --accent-secondary: #10b981;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-main);
+            color: #1a1a1a;
+            overflow-x: hidden;
+            letter-spacing: -0.02em;
+        }
+
+        .ambient-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; overflow: hidden;
+            background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+        }
+
+        .blob {
+            position: absolute; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+            border-radius: 50%; filter: blur(80px);
+            animation: move 25s infinite alternate;
+        }
+
+        @keyframes move {
+            from { transform: translate(-10%, -10%) scale(1); }
+            to { transform: translate(20%, 20%) scale(1.2); }
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 48px 0 rgba(31, 38, 135, 0.08);
+            border-color: rgba(37, 99, 235, 0.2);
+        }
+
+        .course-item {
+            position: absolute; left: 2px; right: 2px;
+            border-radius: 12px; padding: 10px; font-size: 0.75rem;
+            border: 1px solid transparent;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+        }
+
+        .course-item:hover {
+            transform: scale(1.02); z-index: 50;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .schedule-grid {
+            display: grid; grid-template-columns: 70px repeat(7, 1fr);
+            min-width: 900px;
+        }
+
+        .time-row { height: 50px; border-bottom: 1px solid rgba(0, 0, 0, 0.03); }
+
+        .chart-container { position: relative; width: 100%; height: 280px; max-width: 100%; }
+
+        .mode-switch {
+            position: relative; display: inline-flex;
+            background: #f1f5f9; padding: 4px; border-radius: 14px;
+        }
+
+        .mode-switch button {
+            position: relative; z-index: 10; padding: 8px 20px;
+            font-size: 0.875rem; font-weight: 600; transition: color 0.3s;
+        }
+
+        .mode-switch .slider {
+            position: absolute; top: 4px; left: 4px;
+            height: calc(100% - 8px); background: white;
+            border-radius: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1; width: 90px;
+        }
+
+        .stat-value {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .bento-grid {
+            display: grid; grid-template-columns: repeat(12, 1fr); gap: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .bento-grid { grid-template-columns: 1fr; }
+            .col-span-8, .col-span-4 { grid-column: span 1 / span 1; }
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+        .fade-in-up {
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-bg">
+        <div class="blob" style="top: -10%; left: -10%;"></div>
+        <div class="blob" style="bottom: -10%; right: -10%; background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, rgba(255, 255, 255, 0) 70%);"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-[100] px-6 py-4">
+        <div class="max-w-[1600px] mx-auto flex items-center justify-between glass-card rounded-3xl px-8 py-3">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-xl shadow-slate-200">룡</div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tighter text-slate-900">룡수학 <span class="text-blue-600 font-medium">SCHEDULE</span></h1>
+                    <p class="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Premium Learning Experience 2026</p>
+                </div>
+            </div>
+            <div class="hidden md:flex items-center gap-8">
+                <div class="mode-switch">
+                    <div class="slider" id="modeSlider"></div>
+                    <button onclick="setMode('current')" id="modeCurrent" class="text-blue-600">2월 시간표</button>
+                    <button onclick="setMode('march')" id="modeMarch" class="text-slate-400">3월 개편안</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-[1600px] mx-auto px-6 py-8">
+        
+        <!-- Hero Header -->
+        <header class="mb-12 fade-in-up">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div class="max-w-2xl">
+                    <span class="inline-block px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full mb-4 tracking-wider uppercase">Strategic Roadmap</span>
+                    <h2 class="text-5xl font-bold text-slate-900 leading-[1.1] mb-4">
+                        데이터로 설계된<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-500">완벽한 학습 몰입</span>
+                    </h2>
+                    <p class="text-slate-500 text-lg font-medium leading-relaxed">
+                        룡수학만의 정교한 스케줄링으로 내신 정상을 향한 길을 제안합니다.<br>
+                        3월, 내신 대비를 위한 최적의 커리큘럼 전환을 확인하세요.
+                    </p>
+                </div>
+                <div class="flex gap-4">
+                    <div class="glass-card p-6 rounded-3xl text-center min-w-[140px]">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Weekly Focus</p>
+                        <p class="text-3xl font-bold stat-value" id="totalFocusHours">52h</p>
+                    </div>
+                    <div class="glass-card p-6 rounded-3xl text-center min-w-[140px]">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Efficiency Rating</p>
+                        <p class="text-3xl font-bold stat-value text-emerald-600" id="efficiencyRating">High</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Bento Layout -->
+        <div class="bento-grid fade-in-up" style="animation-delay: 0.2s;">
+            
+            <!-- Schedule Card -->
+            <div class="lg:col-span-8 glass-card rounded-[40px] overflow-hidden">
+                <div class="p-8 border-b border-slate-50 flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900" id="gridTitle">학습 타임라인</h3>
+                        <p class="text-sm text-slate-400 font-medium mt-1">요일별 정밀 스케줄링</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="filterType('all')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-900 text-white shadow-lg filter-btn" data-type="all">전체</button>
+                        <button onclick="filterType('algebra')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-500 border border-slate-100 filter-btn" data-type="algebra">대수</button>
+                        <button onclick="filterType('calculus')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-500 border border-slate-100 filter-btn" data-type="calculus">미적/내신</button>
+                        <button onclick="filterType('qna')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-500 border border-slate-100 filter-btn" data-type="qna">질답</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto custom-scroll p-4">
+                    <div class="schedule-grid relative">
+                        <div class="grid grid-rows-[repeat(15,50px)]" id="timeLabels"></div>
+
+                        <div class="col-span-7 grid grid-cols-7 relative h-[750px] bg-slate-50/20 rounded-2xl overflow-hidden border border-slate-50">
+                            <div class="absolute inset-0 grid grid-cols-7 pointer-events-none">
+                                <div class="border-r border-slate-100/50"></div><div class="border-r border-slate-100/50"></div>
+                                <div class="border-r border-slate-100/50"></div><div class="border-r border-slate-100/50"></div>
+                                <div class="border-r border-slate-100/50"></div><div class="border-r border-slate-100/50"></div>
+                            </div>
+                            <div class="absolute inset-0 grid grid-rows-[repeat(15,50px)] pointer-events-none">
+                                <div class="time-row"></div><div class="time-row"></div><div class="time-row"></div>
+                                <div class="time-row"></div><div class="time-row"></div><div class="time-row"></div>
+                                <div class="time-row"></div><div class="time-row"></div><div class="time-row"></div>
+                                <div class="time-row"></div><div class="time-row"></div><div class="time-row"></div>
+                                <div class="time-row"></div><div class="time-row"></div><div class="time-row"></div>
+                            </div>
+
+                            <div id="courseContainer" class="absolute inset-0 z-10 pointer-events-none"></div>
+
+                            <div class="absolute bottom-0 left-0 right-0 grid grid-cols-7 text-center py-4 bg-white/60 backdrop-blur-md border-t border-slate-50 z-20">
+                                <span class="text-xs font-bold text-slate-400">MON</span><span class="text-xs font-bold text-slate-400">TUE</span>
+                                <span class="text-xs font-bold text-slate-400">WED</span><span class="text-xs font-bold text-slate-400">THU</span>
+                                <span class="text-xs font-bold text-slate-400">FRI</span><span class="text-xs font-bold text-blue-500">SAT</span>
+                                <span class="text-xs font-bold text-rose-500">SUN</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Card -->
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                <!-- Balance Chart Card -->
+                <div class="glass-card rounded-[40px] p-8 flex-1">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="text-lg font-bold text-slate-900">학습 밸런스</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="balanceChart"></canvas>
+                    </div>
+                    <div class="mt-8 flex justify-between items-center bg-slate-50/50 p-6 rounded-3xl border border-slate-50">
+                        <div class="text-center">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Lecture</p>
+                            <p class="text-xl font-bold text-slate-800" id="lecHours">0h</p>
+                        </div>
+                        <div class="w-[1px] h-8 bg-slate-200"></div>
+                        <div class="text-center">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Feedback</p>
+                            <p class="text-xl font-bold text-emerald-600" id="feedbackHours">0h</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-[40px] p-8">
+                    <h3 class="text-lg font-bold text-slate-900 mb-6">프로그램 가이드</h3>
+                    <div class="space-y-4" id="catalogList"></div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-24 py-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 fade-in-up text-sm font-medium text-slate-400">
+            <div class="flex items-center gap-4 opacity-40 grayscale">
+                <div class="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold text-sm">룡</div>
+                <span class="text-sm font-bold tracking-tighter">RYONG MATH STUDIO</span>
+            </div>
+            <p>© 2026 Ryong Education Lab. Crafted with Precision.</p>
+        </footer>
+    </main>
+
+    <script>
+        const scheduleData = [
+            // Algebra Immersive - Hidden in March
+            { id: 1, day: 0, start: 9, duration: 3.5, title: '대수 몰입 정규수업', type: 'algebra', sub: 'Main Lecture', color: 'rgba(59, 130, 246, 0.1)', border: '#3b82f6', hideInMarch: true },
+            { id: 2, day: 0, start: 13.5, duration: 3.5, title: '대수 몰입 질답피드백', type: 'algebra', sub: 'Q&A Clinic', color: 'rgba(16, 185, 129, 0.1)', border: '#10b981', hideInMarch: true },
+            { id: 3, day: 2, start: 9, duration: 3.5, title: '대수 몰입 정규수업', type: 'algebra', sub: 'Main Lecture', color: 'rgba(59, 130, 246, 0.1)', border: '#3b82f6', hideInMarch: true },
+            { id: 4, day: 2, start: 13.5, duration: 3.5, title: '대수 몰입 질답피드백', type: 'algebra', sub: 'Q&A Clinic', color: 'rgba(16, 185, 129, 0.1)', border: '#10b981', hideInMarch: true },
+            { id: 5, day: 4, start: 9, duration: 3.5, title: '대수 몰입 정규수업', type: 'algebra', sub: 'Main Lecture', color: 'rgba(59, 130, 246, 0.1)', border: '#3b82f6', hideInMarch: true },
+            { id: 6, day: 4, start: 13.5, duration: 3.5, title: '대수 몰입 질답피드백', type: 'algebra', sub: 'Q&A Clinic', color: 'rgba(16, 185, 129, 0.1)', border: '#10b981', hideInMarch: true },
+
+            // Mon/Fri: Concept Exam Prep
+            { id: 7, day: 0, start: 18, duration: 4, title: '미적분1 개념완성', type: 'calculus', sub: 'Evening Class', color: 'rgba(79, 70, 229, 0.1)', border: '#4f46e5', marchTitle: '대수 내신대비 개념반' },
+            { id: 8, day: 0, start: 22, duration: 1.5, title: '미적분 심야 질답', type: 'calculus', sub: 'Late Night Q&A', color: 'rgba(245, 158, 11, 0.1)', border: '#f59e0b', marchTitle: '질답피드백' },
+            { id: 9, day: 4, start: 18, duration: 4, title: '미적분1 개념완성', type: 'calculus', sub: 'Evening Class', color: 'rgba(79, 70, 229, 0.1)', border: '#4f46e5', marchTitle: '대수 내신대비 개념반' },
+            { id: 10, day: 4, start: 22, duration: 1.5, title: '미적분 심야 질답', type: 'calculus', sub: 'Late Night Q&A', color: 'rgba(245, 158, 11, 0.1)', border: '#f59e0b', marchTitle: '질답피드백' },
+
+            // Wed/Sat: 실력 Exam Prep
+            { id: 11, day: 2, start: 18, duration: 4, title: '미적분1 실력강화', type: 'calculus', sub: 'Evening Class', color: 'rgba(15, 23, 42, 0.05)', border: '#0f172a', marchTitle: '대수 내신대비 실력반' },
+            { id: 12, day: 2, start: 22, duration: 1.5, title: '미적분 심야 질답', type: 'calculus', sub: 'Late Night Q&A', color: 'rgba(245, 158, 11, 0.1)', border: '#f59e0b', marchTitle: '질답피드백' },
+            { id: 13, day: 5, start: 18, duration: 4, title: '미적분1 실력강화', type: 'calculus', sub: 'Weekend Evening', color: 'rgba(15, 23, 42, 0.05)', border: '#0f172a', marchTitle: '대수 내신대비 실력반' },
+            { id: 14, day: 5, start: 22, duration: 1.5, title: '미적분 심야 질답', type: 'calculus', sub: 'Late Night Q&A', color: 'rgba(245, 158, 11, 0.1)', border: '#f59e0b', marchTitle: '질답피드백' },
+
+            // Weekend
+            { id: 15, day: 5, start: 11, duration: 6, title: '주말 집중 피드백', type: 'qna', sub: 'Full Day Clinic', color: 'rgba(245, 158, 11, 0.1)', border: '#f59e0b', marchTitle: '질답피드백' },
+            { id: 16, day: 6, start: 11, duration: 6, title: '주말 집중 피드백', type: 'qna', sub: 'Full Day Clinic', color: 'rgba(245, 158, 11, 0.1)', border: '#f59e0b', marchTitle: '질답피드백' },
+        ];
+
+        let currentMode = 'current';
+        let currentFilter = 'all';
+        let balanceChart;
+
+        function init() {
+            renderTimeLabels();
+            renderSchedule();
+            renderCatalog();
+            initChart();
+            updateStats();
+        }
+
+        function renderTimeLabels() {
+            const container = document.getElementById('timeLabels');
+            for(let i=9; i<=23; i++) {
+                const label = document.createElement('div');
+                label.className = 'flex items-start justify-end pr-4 pt-1 text-[10px] font-bold text-slate-300 h-[50px]';
+                label.textContent = `${i.toString().padStart(2, '0')}:00`;
+                container.appendChild(label);
+            }
+        }
+
+        function renderSchedule() {
+            const container = document.getElementById('courseContainer');
+            container.innerHTML = '';
+            
+            const filtered = scheduleData.filter(item => {
+                if (currentMode === 'march' && item.hideInMarch) return false;
+                if (currentFilter === 'all') return true;
+                if (currentFilter === 'qna') {
+                    const title = (currentMode === 'march' && item.marchTitle) ? item.marchTitle : item.title;
+                    return item.type === 'qna' || title.includes('질답') || title.includes('피드백');
+                }
+                return item.type === currentFilter;
+            });
+
+            filtered.forEach(item => {
+                const block = document.createElement('div');
+                block.className = 'course-item pointer-events-auto absolute glass-card';
+                block.style.left = `calc(${(item.day * (100/7))}% + 2px)`;
+                block.style.width = `calc(${(100/7)}% - 4px)`;
+                block.style.top = (item.start - 9) * 50 + 'px';
+                block.style.height = (item.duration * 50) + 'px';
+                block.style.backgroundColor = item.color;
+                block.style.borderLeft = `3px solid ${item.border}`;
+
+                const title = (currentMode === 'march' && item.marchTitle) ? item.marchTitle : item.title;
+                const timeStr = `${formatTime(item.start)} - ${formatTime(item.start + item.duration)}`;
+
+                block.innerHTML = `
+                    <div class="font-bold text-slate-800 truncate mb-0.5">${title}</div>
+                    <div class="text-[9px] font-bold text-slate-400 mb-2 uppercase tracking-tight">${item.sub}</div>
+                    <div class="text-[9px] font-mono font-bold text-slate-400 mt-auto">${timeStr}</div>
+                `;
+                container.appendChild(block);
+            });
+            updateStats();
+        }
+
+        function renderCatalog() {
+            const list = document.getElementById('catalogList');
+            list.innerHTML = '';
+            const items = currentMode === 'current' ? 
+                [{ i: '💎', t: '대수 몰입', d: '주 3회 고밀도 대수 학습' }, { i: '🚀', t: '미적분 개념', d: '야간 필수 이론 완성' }] :
+                [{ i: '🔥', t: '대수 내신 개념', d: '월금 정밀 내신 공략' }, { i: '⚔️', t: '대수 내신 실력', d: '수토 심화 유형 정복' }];
+            
+            items.push({ i: '🧘', t: '질답피드백', d: '약점을 강점으로 바꾸는 시간' });
+
+            items.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'flex items-center gap-4 p-4 bg-slate-50/50 rounded-2xl border border-slate-50 hover:bg-white hover:shadow-lg transition-all cursor-pointer';
+                card.innerHTML = `<div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-xl shadow-sm border border-slate-100">${c.i}</div><div><h4 class="text-sm font-bold text-slate-900">${c.t}</h4><p class="text-xs text-slate-400 font-medium">${c.d}</p></div>`;
+                list.appendChild(card);
+            });
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            const slider = document.getElementById('modeSlider');
+            const btnC = document.getElementById('modeCurrent');
+            const btnM = document.getElementById('modeMarch');
+            const title = document.getElementById('gridTitle');
+            
+            if(mode === 'current') {
+                slider.style.transform = 'translateX(0)';
+                btnC.className = 'text-blue-600'; btnM.className = 'text-slate-400';
+                title.textContent = '2월 주간 타임라인';
+            } else {
+                slider.style.transform = 'translateX(90px)';
+                btnM.className = 'text-blue-600'; btnC.className = 'text-slate-400';
+                title.textContent = '3월 내신대비 타임라인';
+            }
+            renderSchedule();
+            renderCatalog();
+        }
+
+        function filterType(type) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = (btn.dataset.type === type) ? 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-900 text-white shadow-lg filter-btn' : 'px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-500 border border-slate-100 filter-btn';
+            });
+            renderSchedule();
+        }
+
+        function formatTime(decimal) {
+            const h = Math.floor(decimal);
+            const m = (decimal % 1) * 60;
+            return `${h.toString().padStart(2, '0')}:${m === 0 ? '00' : m}`;
+        }
+
+        function updateStats() {
+            let total = 0, lec = 0, feed = 0;
+            scheduleData.forEach(i => {
+                if(currentMode === 'march' && i.hideInMarch) return;
+                total += i.duration;
+                const title = (currentMode === 'march' && i.marchTitle) ? i.marchTitle : i.title;
+                if(title.includes('질답') || title.includes('피드백')) feed += i.duration;
+                else lec += i.duration;
+            });
+            document.getElementById('totalFocusHours').textContent = total + 'h';
+            document.getElementById('lecHours').textContent = lec + 'h';
+            document.getElementById('feedbackHours').textContent = feed + 'h';
+            if(balanceChart) {
+                balanceChart.data.datasets[0].data = [lec, feed];
+                balanceChart.update();
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('balanceChart').getContext('2d');
+            balanceChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: ['강의', '질답피드백'], datasets: [{ data: [1, 1], backgroundColor: ['#e2e8f0', '#2563eb'], borderWidth: 0 }] },
+                options: { maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } }
+            });
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
