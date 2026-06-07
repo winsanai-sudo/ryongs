@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>수학 손글씨 풀이 도구 빌드업 시연</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Math Teacher AI Seminar</p>
+        <h1>밋밋한 입력창이 수업 도구가 되는 과정</h1>
+      </div>
+      <div class="top-actions">
+        <button class="ghost-button" id="copyAllBtn" type="button">전체 프롬프트 복사</button>
+        <button class="primary-button" id="startBtn" type="button">처음부터 시연</button>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <aside class="step-rail" aria-label="빌드업 단계">
+        <div class="rail-title">
+          <span>Build-up</span>
+          <strong>11단계</strong>
+        </div>
+        <nav id="stepNav"></nav>
+      </aside>
+
+      <section class="stage">
+        <div class="stage-header">
+          <div>
+            <p class="stage-kicker" id="stageKicker">STEP 0</p>
+            <h2 id="stageTitle">완성본을 10초만 보여주고, 다시 처음으로 돌아갑니다</h2>
+          </div>
+          <div class="stage-controls">
+            <button class="icon-button" id="prevBtn" type="button" aria-label="이전 단계">←</button>
+            <span id="counter">0 / 10</span>
+            <button class="icon-button" id="nextBtn" type="button" aria-label="다음 단계">→</button>
+          </div>
+        </div>
+
+        <div class="demo-grid">
+          <article class="browser-frame" aria-label="시연 화면">
+            <div class="browser-bar">
+              <span></span><span></span><span></span>
+              <em id="demoUrl">local preview</em>
+            </div>
+            <div class="demo-surface" id="demoSurface"></div>
+          </article>
+
+          <article class="prompt-panel">
+            <div class="panel-top">
+              <p>복사용 프롬프트</p>
+              <button class="copy-button" id="copyBtn" type="button">복사</button>
+            </div>
+            <pre id="promptText"></pre>
+            <div class="talk-track">
+              <p class="talk-label">강사 멘트</p>
+              <p id="talkText"></p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="script-section">
+        <div class="section-heading">
+          <p class="eyebrow">Presenter Script</p>
+          <h2>처음부터 끝까지 이어서 말하는 빌드업 대본</h2>
+        </div>
+        <div class="script-card">
+          <p>
+            지금부터 코딩 설명은 거의 하지 않겠습니다. 제가 말로 요청할 때마다 화면이 어떻게 바뀌는지만 봐주세요.
+            처음에는 아무것도 아닌 입력창입니다. 그런데 원하는 것을 하나씩 말하면, 학생에게 바로 줄 수 있는 수업 도구가 됩니다.
+          </p>
+          <p>
+            이 과정의 핵심은 한 번에 완성하려는 것이 아닙니다. 결과를 보고, 부족한 점을 말하고, 다시 고치는 것입니다.
+            선생님이 수학 자료의 구조와 학생의 사용 상황을 말해줄수록 도구가 좋아집니다.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">복사되었습니다</div>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
