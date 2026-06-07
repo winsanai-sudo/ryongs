@@ -1,15 +1,16 @@
-# 수학 손글씨 풀이 AI 세미나
+# ryongs
 
-완전 초보 선생님들에게 Codex 사용 과정을 드라마틱하게 보여주기 위한 정적 웹페이지입니다.
+수학 손글씨 풀이 AI 세미나용 빌드업 시연 페이지입니다.
 
-## 구성
+## Pages
 
-- `index.html`: 세미나 시연 페이지
-- `styles.css`: 디자인 스타일
+- `index.html`: 세미나 빌드업 시연 페이지
+- `ryongs.html`: 기존 룡수학 스케줄 대시보드
+- `styles.css`: 세미나 페이지 스타일
 - `script.js`: 단계 이동 및 프롬프트 복사 기능
 - `render.yaml`: Render Static Site 배포 설정
 
-## 시연 흐름
+## Seminar Demo Flow
 
 1. 완성본 10초 보기
 2. 허술한 첫 요청
@@ -23,7 +24,7 @@
 10. GitHub 저장
 11. Render 배포
 
-## Render 배포
+## Render
 
 Render에서 이 GitHub 저장소를 연결하고 Static Site로 배포하면 됩니다.
 
